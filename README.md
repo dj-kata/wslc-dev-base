@@ -145,7 +145,7 @@ dotfiles/
    └─ .tmux.conf
 ```
 
-Rebuild the image after changing these files.
+`postCreateCommand` and `postStartCommand` run `install-dotfiles`, so these files are copied into `$HOME` when the Dev Container is created or started. Restart the Dev Container after editing dotfiles. Rebuild the image when you also want the fallback copies inside the image to change.
 
 ## Personal Env and Secrets
 

@@ -35,7 +35,8 @@ RUN apt-get update \
         wget \
         zip \
         zsh \
-    && locale-gen C.UTF-8 \
+    && sed -i "s/^# *ja_JP.UTF-8 UTF-8/ja_JP.UTF-8 UTF-8/" /etc/locale.gen \
+    && locale-gen C.UTF-8 ja_JP.UTF-8 \
     && ln -sf /usr/bin/batcat /usr/local/bin/bat \
     && rm -rf /var/lib/apt/lists/*
 
@@ -66,9 +67,11 @@ RUN curl -LsSf https://astral.sh/uv/install.sh | env UV_INSTALL_DIR=/usr/local/b
 COPY dotfiles/zsh/.zshrc /home/${USERNAME}/.zshrc
 COPY dotfiles/tmux/.tmux.conf /home/${USERNAME}/.tmux.conf
 COPY scripts/setup-git-identity.sh /usr/local/bin/setup-git-identity
+COPY scripts/install-dotfiles.sh /usr/local/bin/install-dotfiles
+COPY dotfiles /usr/local/share/wslc-dev-base/dotfiles
 
 RUN chown "${USERNAME}:${USERNAME}" /home/"${USERNAME}"/.zshrc /home/"${USERNAME}"/.tmux.conf \
-    && chmod 0755 /usr/local/bin/setup-git-identity
+    && chmod 0755 /usr/local/bin/setup-git-identity /usr/local/bin/install-dotfiles
 
 USER ${USERNAME}
 WORKDIR /workspace

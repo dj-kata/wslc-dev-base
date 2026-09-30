@@ -6,6 +6,7 @@ secrets/
 # Local editor and OS noise
 .vscode/*
 !.vscode/settings.json
+!.vscode/extensions.json
 .DS_Store
 Thumbs.db
 

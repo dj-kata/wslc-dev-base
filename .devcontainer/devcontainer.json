@@ -2,11 +2,17 @@
   "name": "wslc-dev-base",
   "image": "localhost/wslc-dev-base:dev",
   "remoteUser": "vscode",
-  "postCreateCommand": "setup-git-identity",
+  "postCreateCommand": "install-dotfiles && setup-git-identity",
+  "postStartCommand": "install-dotfiles",
   "customizations": {
     "vscode": {
       "settings": {
-        "terminal.integrated.defaultProfile.linux": "zsh"
+        "terminal.integrated.defaultProfile.linux": "zsh",
+        "github.copilot.enable": {
+          "*": false
+        },
+        "github.copilot.editor.enableAutoCompletions": false,
+        "github.copilot.chat.enabled": false
       },
       "extensions": [
         "EditorConfig.EditorConfig",
@@ -15,7 +21,8 @@
         "timonwong.shellcheck",
         "redhat.vscode-yaml",
         "streetsidesoftware.code-spell-checker",
-        "usernamehw.errorlens"
+        "usernamehw.errorlens",
+        "openai.chatgpt"
       ]
     }
   }
