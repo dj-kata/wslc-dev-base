@@ -1,0 +1,9 @@
+.git
+.env
+.env.local
+*.secret
+secrets/
+dist/
+build/
+*.tar
+*.tar.gz

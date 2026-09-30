@@ -1,0 +1,22 @@
+{
+  "name": "wslc-dev-base",
+  "image": "localhost/wslc-dev-base:dev",
+  "remoteUser": "vscode",
+  "postCreateCommand": "setup-git-identity",
+  "customizations": {
+    "vscode": {
+      "settings": {
+        "terminal.integrated.defaultProfile.linux": "zsh"
+      },
+      "extensions": [
+        "EditorConfig.EditorConfig",
+        "eamodio.gitlens",
+        "mhutchie.git-graph",
+        "timonwong.shellcheck",
+        "redhat.vscode-yaml",
+        "streetsidesoftware.code-spell-checker",
+        "usernamehw.errorlens"
+      ]
+    }
+  }
+}

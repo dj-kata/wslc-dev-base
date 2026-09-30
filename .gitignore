@@ -1,0 +1,16 @@
+.env
+.env.local
+*.secret
+secrets/
+
+# Local editor and OS noise
+.vscode/*
+!.vscode/settings.json
+.DS_Store
+Thumbs.db
+
+# Build output
+dist/
+build/
+*.tar
+*.tar.gz
