@@ -23,6 +23,7 @@ Important files:
 - `dotfiles/tmux/.tmux.conf`: common tmux config copied into the container user's home.
 - `scripts/install-dotfiles.sh`: copies repo dotfiles into `$HOME` on create/start.
 - `scripts/setup-git-identity.sh`: fills missing Git identity from optional env values without overwriting existing config.
+- `config/ssh/ssh_known_hosts`: GitHub official SSH host keys copied into `/etc/ssh/ssh_known_hosts`.
 - `README.md` and `docs/secrets.md`: user-facing operating notes.
 
 ## Design Invariants
@@ -75,6 +76,8 @@ For zsh + fzf:
 - Ctrl-r should be bound to an fzf history widget.
 - Do not use `status` as a local zsh variable; it is read-only. Use names like `fzf_status`.
 - On fzf cancel/Esc, call `zle reset-prompt` and `zle -R` so the terminal display does not shift or leave stale lines.
+
+For GitHub SSH host verification, keep GitHub official host keys in `config/ssh/ssh_known_hosts` and copy them to `/etc/ssh/ssh_known_hosts`; do not rely on interactive host-key prompts in Dev Containers. Keep private keys out of the image; use SSH agent forwarding or personal runtime mounts/volumes.
 
 For ssh-agent/keychain:
 

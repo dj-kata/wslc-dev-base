@@ -29,6 +29,15 @@ if [[ -d /home/vscode ]]; then
   fi
 
   chown -R vscode:vscode "$codex_home" || true
+
+  if [[ -d /home/vscode/.ssh ]]; then
+    chown -R vscode:vscode /home/vscode/.ssh || true
+    chmod 0700 /home/vscode/.ssh || true
+    find /home/vscode/.ssh -type f -name 'known_hosts*' -exec chmod 0644 {} + 2>/dev/null || true
+    find /home/vscode/.ssh -type f -name '*.pub' -exec chmod 0644 {} + 2>/dev/null || true
+    find /home/vscode/.ssh -type f ! -name '*.pub' ! -name 'known_hosts*' ! -name 'config' -exec chmod 0600 {} + 2>/dev/null || true
+    [[ -f /home/vscode/.ssh/config ]] && chmod 0600 /home/vscode/.ssh/config || true
+  fi
 fi
 
 exec "$@"

@@ -41,6 +41,12 @@ Use the named volume for:
 
 Do not bind-mount Windows `%USERPROFILE%\.codex` directly to `CODEX_HOME`; Codex may fail to initialize SQLite or other runtime state on that filesystem. Keep Windows `.codex` as the source for durable user settings, and keep generated runtime state in the Linux volume. The repository `.codex/` directory is for project-scoped checked-in assets. Do not commit auth files, tokens, provider secrets, personal profiles, or machine-local service paths there.
 
+## SSH Keys
+
+SSH private keys are personal secrets. Do not copy them into `Containerfile`, committed files, or image layers. GitHub host verification is handled by the tracked `/etc/ssh/ssh_known_hosts` seed, but user authentication should use SSH agent forwarding or a runtime bind mount/volume for personal keys.
+
+If a bind-mounted `.ssh` directory comes from Windows and OpenSSH rejects key permissions, prefer SSH agent forwarding or a Linux-side `.ssh` directory/volume with `0600` private key permissions.
+
 ## API Keys and Tokens
 
 Do not place secrets in `Containerfile`, build args, or committed files. Use runtime environment variables, an ignored `.env`, VS Code secret storage, or bind mounts for personal config directories.

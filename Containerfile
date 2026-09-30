@@ -71,9 +71,11 @@ COPY scripts/setup-git-identity.sh /usr/local/bin/setup-git-identity
 COPY scripts/install-dotfiles.sh /usr/local/bin/install-dotfiles
 COPY scripts/devcontainer-entrypoint.sh /usr/local/bin/devcontainer-entrypoint
 COPY dotfiles /usr/local/share/wslc-dev-base/dotfiles
+COPY config/ssh/ssh_known_hosts /etc/ssh/ssh_known_hosts
 
 RUN chown "${USERNAME}:${USERNAME}" /home/"${USERNAME}"/.zshrc /home/"${USERNAME}"/.tmux.conf \
-    && chmod 0755 /usr/local/bin/setup-git-identity /usr/local/bin/install-dotfiles /usr/local/bin/devcontainer-entrypoint
+    && chmod 0755 /usr/local/bin/setup-git-identity /usr/local/bin/install-dotfiles /usr/local/bin/devcontainer-entrypoint \
+    && chmod 0644 /etc/ssh/ssh_known_hosts
 
 USER root
 WORKDIR /workspace

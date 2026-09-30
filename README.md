@@ -156,6 +156,30 @@ The image never copies `.env`, `.env.local`, `*.secret`, or `secrets/`. Do not p
 
 See `docs/secrets.md` for details.
 
+## GitHub SSH Access
+
+The image includes GitHub's official SSH host keys in `/etc/ssh/ssh_known_hosts`, so `github.com` host verification should not prompt inside the Dev Container. Rebuild the image after changing `config/ssh/ssh_known_hosts`.
+
+Authentication is still personal state and is not baked into the image. Use one of these approaches:
+
+- Prefer SSH agent forwarding when available from VS Code or your host environment.
+- Or bind mount a personal `.ssh` directory at runtime, keeping private keys out of Git and out of image layers.
+
+For manual runs, a mount can look like this:
+
+```bash
+--mount type=bind,source="$HOME/.ssh",target=/home/vscode/.ssh,readonly
+```
+
+If using a Windows `.ssh` bind mount, OpenSSH may reject private keys when the filesystem reports broad permissions. In that case, use an SSH agent or keep a Linux-side `.ssh` directory/volume with proper `0600` key permissions.
+
+Check access from inside the Dev Container with:
+
+```bash
+ssh -T git@github.com
+git ls-remote git@github.com:OWNER/REPO.git
+```
+
 ## Git Identity
 
 Preferred behavior:
