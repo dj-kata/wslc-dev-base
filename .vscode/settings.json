@@ -1,3 +1,5 @@
 {
-  "dev.containers.dockerPath": "C:\\Program Files\\WSL\\wslc.exe"
+  "dev.containers.dockerPath": "C:\\Program Files\\WSL\\wslc.exe",
+  "chatgpt.openOnStartup": false,
+  "chatgpt.runCodexInWindowsSubsystemForLinux": true
 }

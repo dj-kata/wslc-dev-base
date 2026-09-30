@@ -11,6 +11,7 @@ This repository is intentionally not tied to a single project. It provides commo
 - zsh as the default shell
 - tmux, git, curl, wget, unzip, zip, build-essential
 - fzf, ripgrep, jq, bat, eza, less, tree, procps, file, openssh-client
+- bubblewrap for Codex sandbox support
 - Linux uv installed with Astral's official installer
 - Git-managed zsh and tmux dotfiles
 - Optional Git identity fallback from ignored personal env files
@@ -89,7 +90,7 @@ cd D:\work\wslc-dev-base
 
 Then open this repository in VS Code and run "Dev Containers: Reopen in Container". This workspace includes `dev.containers.dockerPath = C:\\Program Files\\WSL\\wslc.exe`, but also set the same value in VS Code User Settings for the host window you use.
 
-The Dev Container configuration uses the prebuilt image `localhost/wslc-dev-base:dev`, connects as `vscode`, lets Dev Containers override the startup command so the container stays alive, sets zsh as the integrated terminal profile, and runs `setup-git-identity` after creation. This avoids Dev Containers calling Docker Buildx, which is not supported by WSLc 3.0.1. The image default command is `sleep infinity` so the container stays alive even if Dev Containers cannot override the command. `.env` is optional; the container works without it.
+The Dev Container configuration uses the prebuilt image `localhost/wslc-dev-base:dev`, starts the container with a root entrypoint that fixes mounted-volume ownership, connects day-to-day sessions as `vscode`, mounts the Linux named volume `wslc-dev-base-codex-home` at `/home/vscode/.codex`, mounts `%USERPROFILE%\.codex` read-only at `/mnt/host-codex` as a seed source, sets `CODEX_HOME=/home/vscode/.codex`, sets zsh as the integrated terminal profile, and runs `install-dotfiles && setup-git-identity` after creation. This avoids Dev Containers calling Docker Buildx, which is not supported by WSLc 3.0.1. The image default command is `sleep infinity` so the container stays alive even if Dev Containers cannot override the command. `.env` is optional; the container works without it.
 
 ## VS Code Extensions
 
@@ -166,13 +167,29 @@ Preferred behavior:
 
 The image does not contain a real personal name or email address.
 
+## Codex Settings Persistence
+
+Codex user-level config and state are persisted in a Linux named volume:
+
+```text
+wslc-dev-base-codex-home volume -> /home/vscode/.codex
+%USERPROFILE%\.codex read-only -> /mnt/host-codex
+CODEX_HOME=/home/vscode/.codex
+```
+
+This keeps Codex logs, sessions, caches, and SQLite-backed runtime state on a Linux filesystem. The image entrypoint creates `/home/vscode/.codex`, seeds `config.toml`, `*.config.toml`, `auth.json`, `hooks.json`, `rules/`, and `skills/` from `/mnt/host-codex` when present, then chowns the volume to `vscode:vscode` before VS Code extensions start. Do not bind-mount Windows `%USERPROFILE%\.codex` directly to `CODEX_HOME`; Codex can fail while initializing SQLite or other runtime state on that filesystem.
+
+The repo-local `.codex/` directory is for project-scoped checked-in assets such as skills or project overrides. Keep secrets, auth files, provider settings, notification hooks, and machine-local paths in the user-level Codex home volume.
+
+To inspect or back up generated state, use a temporary container or `wslc cp`/export workflow appropriate for WSLc. Rebuilding the image does not remove the named volume, but explicitly removing the volume will remove Codex login/runtime state. Host-side `config.toml` remains the preferred source for durable user settings.
+
 ## Personal Config Mounts
 
-Bind mount personal config only when a workflow needs it:
+Bind mount other personal config only when a workflow needs it. Do not bind-mount a Windows `.codex` directory directly to `CODEX_HOME`; use a Linux volume for that. Examples for manual `wslc run` or `docker run` commands:
 
 ```bash
+--mount type=bind,source="$HOME/.ssh",target=/home/vscode/.ssh,readonly
 --mount type=bind,source="$HOME/.config/codex",target=/home/vscode/.config/codex
---mount type=bind,source="$HOME/.codex",target=/home/vscode/.codex
 ```
 
 Keep these paths out of the image and out of Git.
@@ -202,6 +219,25 @@ command -v docker || command -v wslc || command -v podman
 ```
 
 If you intentionally want to launch Dev Containers from a Windows-local VS Code window, install Docker Desktop or provide a Windows `docker.exe` shim that forwards to the container engine inside WSL.
+
+### Codex Extension Warnings
+
+These log lines are not all fatal:
+
+- `Codex could not find bubblewrap on PATH`: install `bubblewrap` in the image. This repository includes it in `Containerfile`; rebuild the image to remove the warning.
+- `failed to warm featured plugin ids cache ... 401 Unauthorized`: Codex is running, but the extension is not authenticated for that remote plugin request yet. Sign in from the Codex panel/settings.
+- `ignoring interface.defaultPrompt[0]: prompt must be at most 128 characters`: a plugin manifest in the Codex home volume has a too-long default prompt. Fix or remove that plugin from the Codex home volume if it matters.
+
+### Codex Sidebar Stays Blank
+
+If the Codex sidebar opens but stays on a blank loading view, try these in order:
+
+1. Run `Developer: Reload Window` or fully restart VS Code.
+2. Confirm `/home/vscode/.codex` is backed by the `wslc-dev-base-codex-home` Linux named volume, and `%USERPROFILE%\.codex` is mounted only at `/mnt/host-codex` read-only.
+3. In VS Code, open `Output` and check the Codex/OpenAI ChatGPT extension logs for startup errors.
+4. If the extension is installed but unresponsive on Windows, install or repair the Microsoft Visual C++ Redistributable and Visual Studio Build Tools C++ workload, then fully restart VS Code.
+
+This repo sets `chatgpt.openOnStartup=false` so the panel does not auto-open on every reload, and `chatgpt.runCodexInWindowsSubsystemForLinux=true` so Windows VS Code prefers WSL execution when available.
 
 ### userEnvProbe waits on ssh-add
 

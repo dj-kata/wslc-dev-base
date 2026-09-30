@@ -2,8 +2,8 @@
   "name": "wslc-dev-base",
   "image": "localhost/wslc-dev-base:dev",
   "remoteUser": "vscode",
-  "postCreateCommand": "install-dotfiles && setup-git-identity",
-  "postStartCommand": "install-dotfiles",
+  "postCreateCommand": "sudo mkdir -p /home/vscode/.codex && sudo chown -R vscode:vscode /home/vscode/.codex && install-dotfiles && setup-git-identity",
+  "postStartCommand": "sudo mkdir -p /home/vscode/.codex && sudo chown -R vscode:vscode /home/vscode/.codex && install-dotfiles",
   "customizations": {
     "vscode": {
       "settings": {
@@ -12,7 +12,9 @@
           "*": false
         },
         "github.copilot.editor.enableAutoCompletions": false,
-        "github.copilot.chat.enabled": false
+        "github.copilot.chat.enabled": false,
+        "chatgpt.openOnStartup": false,
+        "chatgpt.runCodexInWindowsSubsystemForLinux": true
       },
       "extensions": [
         "EditorConfig.EditorConfig",
@@ -25,5 +27,13 @@
         "openai.chatgpt"
       ]
     }
-  }
+  },
+  "mounts": [
+    "type=volume,source=wslc-dev-base-codex-home,target=/home/vscode/.codex",
+    "type=bind,source=${localEnv:USERPROFILE}\\.codex,target=/mnt/host-codex,readonly"
+  ],
+  "containerEnv": {
+    "CODEX_HOME": "/home/vscode/.codex"
+  },
+  "containerUser": "root"
 }

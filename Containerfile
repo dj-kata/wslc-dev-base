@@ -15,6 +15,7 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         bat \
         build-essential \
+        bubblewrap \
         ca-certificates \
         curl \
         eza \
@@ -68,12 +69,14 @@ COPY dotfiles/zsh/.zshrc /home/${USERNAME}/.zshrc
 COPY dotfiles/tmux/.tmux.conf /home/${USERNAME}/.tmux.conf
 COPY scripts/setup-git-identity.sh /usr/local/bin/setup-git-identity
 COPY scripts/install-dotfiles.sh /usr/local/bin/install-dotfiles
+COPY scripts/devcontainer-entrypoint.sh /usr/local/bin/devcontainer-entrypoint
 COPY dotfiles /usr/local/share/wslc-dev-base/dotfiles
 
 RUN chown "${USERNAME}:${USERNAME}" /home/"${USERNAME}"/.zshrc /home/"${USERNAME}"/.tmux.conf \
-    && chmod 0755 /usr/local/bin/setup-git-identity /usr/local/bin/install-dotfiles
+    && chmod 0755 /usr/local/bin/setup-git-identity /usr/local/bin/install-dotfiles /usr/local/bin/devcontainer-entrypoint
 
-USER ${USERNAME}
+USER root
 WORKDIR /workspace
 
+ENTRYPOINT ["/usr/local/bin/devcontainer-entrypoint"]
 CMD ["sleep", "infinity"]

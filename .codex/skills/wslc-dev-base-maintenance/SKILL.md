@@ -18,6 +18,7 @@ Important files:
 - `Containerfile`: Ubuntu 24.04 base image, common CLI tools, `vscode` user, uv, fallback dotfiles, persistent `CMD`.
 - `.devcontainer/devcontainer.json`: Dev Containers config that uses a prebuilt image.
 - `.vscode/settings.json`: VS Code workspace hint for WSLc path.
+- `.devcontainer/devcontainer.json` mounts the Linux named volume `wslc-dev-base-codex-home` to `/home/vscode/.codex` and sets `CODEX_HOME` there for persistent Codex user files and runtime state; `scripts/devcontainer-entrypoint.sh` seeds selected config/auth files from `/mnt/host-codex` and chowns this volume before VS Code extensions start.
 - `dotfiles/zsh/.zshrc`: common zsh config copied into the container user's home.
 - `dotfiles/tmux/.tmux.conf`: common tmux config copied into the container user's home.
 - `scripts/install-dotfiles.sh`: copies repo dotfiles into `$HOME` on create/start.
@@ -33,8 +34,10 @@ Preserve these unless the user explicitly changes the architecture:
 - Do not bake secrets, Git author identity, SSH private keys, `.env`, or `secrets/` into the image.
 - Keep project-specific dependencies out of this base image: no PySide6, cx_Freeze, pytest, ruff, Node.js, Java, Android SDK, Verilator, or language-specific VS Code extensions unless the user deliberately broadens scope.
 - Keep VS Code extensions in Dev Containers metadata, not in `Containerfile`.
+- Include `bubblewrap` in the base image for Codex sandbox support.
 - Keep the image command persistent, currently `CMD ["sleep", "infinity"]`, so WSLc/Dev Containers containers do not exit immediately when command override behavior differs.
 - Keep `.devcontainer/devcontainer.json` on `image: localhost/wslc-dev-base:dev` rather than `build` while WSLc lacks Docker Buildx compatibility.
+- Keep Codex user-level files outside the image and repo by mounting the Linux named volume `wslc-dev-base-codex-home` to `/home/vscode/.codex`; repo-local `.codex/` is for checked-in project assets such as skills. Ensure the root entrypoint seeds only safe user-level files from the read-only host mount and chowns the volume to `vscode:vscode`.
 
 ## WSLc / Dev Containers Notes
 
@@ -47,9 +50,13 @@ WSLc 3.0.1 does not support the Docker CLI `buildx` subcommand. The Dev Containe
    then `remove -f <container-id>`.
 3. Reopen in container from VS Code.
 
-The VS Code setting `dev.containers.dockerPath` may need the full Windows path `C:\Program Files\WSL\wslc.exe`; plain `wslc` can fail with `spawn wslc ENOENT` when the Dev Containers host server has a stale or missing PATH.
+The VS Code setting `dev.containers.dockerPath` may need the full Windows path `C:\Program Files\WSL\wslc.exe`; plain `wslc` can fail with `spawn wslc ENOENT` when the Dev Containers host server has a stale or missing PATH. Do not bind-mount Windows `%USERPROFILE%\.codex` directly to `CODEX_HOME`; keep `CODEX_HOME` on a Linux named volume because Codex runtime state can fail on Windows bind mounts. Mount Windows `.codex` read-only at `/mnt/host-codex` only as a seed source.
 
 If logs show `WSLC_E_CONTAINER_NOT_RUNNING`, first check for an old stopped container and verify the image has a persistent command. Do not assume a Containerfile build failure.
+
+Codex warning `failed to warm featured plugin ids cache` with 401 indicates an auth/plugin cache request issue, not necessarily app-server failure. A plugin manifest warning about `interface.defaultPrompt` over 128 characters comes from a plugin under the Codex home volume and should be fixed there if needed.
+
+If the Codex sidebar stays on a blank loading view, first avoid assuming auth failure. Check the Codex/OpenAI ChatGPT extension Output log, confirm `/home/vscode/.codex` is backed by the Linux named volume `wslc-dev-base-codex-home`, reload/restart VS Code, and consider Windows native dependency issues such as Microsoft Visual C++ Redistributable or Visual Studio Build Tools C++ workload. This repo should keep `chatgpt.openOnStartup=false` and may set `chatgpt.runCodexInWindowsSubsystemForLinux=true` for Windows-hosted VS Code.
 
 ## Dotfiles
 

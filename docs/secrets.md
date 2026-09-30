@@ -28,6 +28,19 @@ Run the fallback manually when needed:
 setup-git-identity
 ```
 
+## Codex Configuration
+
+Codex user-level state should live outside the image and outside this repository. For this Dev Container, `CODEX_HOME` is `/home/vscode/.codex`, backed by the Linux named volume `wslc-dev-base-codex-home`. The Windows host `%USERPROFILE%\.codex` directory is mounted read-only at `/mnt/host-codex` only as a seed source. The container entrypoint copies selected user-level files into the Linux volume and fixes ownership to `vscode:vscode` before VS Code extensions start.
+
+Use the named volume for:
+
+- `config.toml` personal defaults
+- `auth.json` or other local auth state
+- MCP server configuration that contains personal paths or credentials
+- profiles, history, logs, caches, sessions, SQLite-backed runtime state, and user-level skills
+
+Do not bind-mount Windows `%USERPROFILE%\.codex` directly to `CODEX_HOME`; Codex may fail to initialize SQLite or other runtime state on that filesystem. Keep Windows `.codex` as the source for durable user settings, and keep generated runtime state in the Linux volume. The repository `.codex/` directory is for project-scoped checked-in assets. Do not commit auth files, tokens, provider secrets, personal profiles, or machine-local service paths there.
+
 ## API Keys and Tokens
 
 Do not place secrets in `Containerfile`, build args, or committed files. Use runtime environment variables, an ignored `.env`, VS Code secret storage, or bind mounts for personal config directories.
