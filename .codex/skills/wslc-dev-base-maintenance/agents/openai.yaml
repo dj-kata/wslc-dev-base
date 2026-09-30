@@ -1,0 +1,4 @@
+version: 1
+interface:
+  display_name: wslc-dev-base Maintenance
+  short_description: Maintain the WSLc Dev Containers base repo.
